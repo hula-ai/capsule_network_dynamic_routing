@@ -102,3 +102,12 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+.idea/
+dataset/MNIST/
+dataset/FashionMNIST/
+save/
+*.h5
+
+
+
+
