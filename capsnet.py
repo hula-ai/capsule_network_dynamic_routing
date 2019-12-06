@@ -39,10 +39,9 @@ class DigitCapsLayer(nn.Module):
         # [1, 1152, 10, 16, 8]
 
     def forward(self, x):
-        batch_size = x.size(0)  # [bs, num_primary_caps, primary_cap_dim]
-        W = self.W.repeat(batch_size, 1, 1, 1, 1)
-        u = x[:, :, None, :, None].repeat(1, 1, options.num_classes, 1, 1)
-        u_hat = torch.matmul(W, u)
+        batch_size = x.size(0)  # [bs, num_prim_caps, prim_cap_dim]
+        u = x[:, :, None, :, None]
+        u_hat = torch.matmul(self.W, u)
 
         # detach u_hat during routing iterations to prevent gradients from flowing
         temp_u_hat = u_hat.detach()

@@ -105,8 +105,11 @@ venv.bak/
 .idea/
 dataset/MNIST/
 dataset/FashionMNIST/
+dataset/cifar-10-batches-py/
+dataset/cifar-10-python.tar.gz
 save/
 *.h5
+
 
 
 

@@ -11,7 +11,7 @@ class MNIST:
         elif mode == 'test':
             test_dataset = datasets.MNIST('./dataset', train=False, download=True)
             self.images = test_dataset.data.float()
-            self.labels =test_dataset.targets
+            self.labels = test_dataset.targets
 
     def __getitem__(self, index):
         img = self.images[index].unsqueeze(0).div(255.)

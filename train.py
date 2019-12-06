@@ -41,9 +41,9 @@ def train():
             global_step += 1
             target = F.one_hot(target, options.num_classes)
 
-            optimizer.zero_grad()
             y_pred, x_reconst, v_length = capsule_net(data, target)
             loss = capsule_loss(data, target, v_length, x_reconst)
+            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
@@ -103,7 +103,7 @@ def evaluate(**kwargs):
         acc_str, best_acc = '(improved)', test_acc
 
     # display
-    log_string("validation_loss: {0:.4f} {1}, validation_accuracy: {2:.02%}{3}"
+    log_string("validation_loss: {0:.4f} {1}, validation_accuracy: {2:.02%} {3}"
                .format(test_loss, loss_str, test_acc, acc_str))
 
     # write to TensorBoard
@@ -186,6 +186,9 @@ if __name__ == '__main__':
     elif options.data_name == 'fashion_mnist':
         from dataset.fashion_mnist import FashionMNIST as data
         os.system('cp {}/dataset/fashion_mnist.py {}'.format(BASE_DIR, save_dir))
+    elif options.data_name == 'cifar10':
+        from dataset.cifar10 import CIFAR10 as data
+        os.system('cp {}/dataset/cifar10.py {}'.format(BASE_DIR, save_dir))
     elif options.data_name == 't_mnist':
         from dataset.mnist_translate import MNIST as data
         os.system('cp {}/dataset/mnist_translate.py {}'.format(BASE_DIR, save_dir))
