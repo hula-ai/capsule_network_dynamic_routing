@@ -14,7 +14,7 @@ from utils.eval_utils import compute_accuracy
 from utils.logger_utils import Logger
 import torch.nn as nn
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1, 2'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1, 2, 3'
 
 
 def log_string(out_str):

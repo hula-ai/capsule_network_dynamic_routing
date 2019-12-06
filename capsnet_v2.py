@@ -33,35 +33,35 @@ class PrimaryCapsLayer(nn.Module):
 class DigitCapsLayer(nn.Module):
     def __init__(self, num_digit_cap, num_prim_cap, in_cap_dim, out_cap_dim, num_iterations):
         super(DigitCapsLayer, self).__init__()
-
+        self.num_prim_cap = num_prim_cap
+        self.num_digit_cap = num_digit_cap
         self.num_iterations = num_iterations
-        self.W = nn.Parameter(0.01 * torch.randn(1, num_prim_cap, num_digit_cap, out_cap_dim, in_cap_dim))
-        # [1, 1152, 10, 16, 8]
+        self.W = nn.Parameter(0.01 * torch.randn(1, num_digit_cap, num_prim_cap, out_cap_dim, in_cap_dim))
+        # [1, 10, 1152, 16, 8]
 
     def forward(self, x):
-        batch_size = x.size(0)  # [bs, num_primary_caps, primary_cap_dim]
-        W = self.W.repeat(batch_size, 1, 1, 1, 1)
-        u = x[:, :, None, :, None].repeat(1, 1, options.num_classes, 1, 1)
-        u_hat = torch.matmul(W, u)
+        batch_size = x.size(0)              # [bs,1152, 16]
+        u = x.unsqueeze(1).unsqueeze(4)     # [bs, 1, 1152, 16, 1]
+        u_hat = torch.matmul(self.W, u)     # [bs, 10, 1152, 16, 1]
+        u_hat = u_hat.squeeze(-1)           # [bs, 10, 1152, 16]
 
         # detach u_hat during routing iterations to prevent gradients from flowing
         temp_u_hat = u_hat.detach()
 
-        b_ij = torch.zeros(batch_size, u_hat.size(1), u_hat.size(2), 1, 1).cuda()
+        b = torch.zeros(batch_size, self.num_digit_cap, self.num_prim_cap, 1).cuda()   # [bs, 10, 1152, 1]
         for i in range(self.num_iterations - 1):
-            c_ij = F.softmax(b_ij, dim=2)
-            s_j = (c_ij * temp_u_hat).sum(dim=1, keepdim=True)  # [bs, 1, 10, 16, 1]
-            v = squash(s_j, dim=-2)
+            c = F.softmax(b, dim=1)
+            s = (c * temp_u_hat).sum(dim=2)     # [bs, 10, 16]
+            v = squash(s)
+            # [bs, 10, 1152, 16] . [batch_size, 10, 16, 1]
+            uv = torch.matmul(temp_u_hat, v.unsqueeze(-1))  # [batch_size, 10, 1152, 1]
+            b += uv
 
-            #  [bs, 1152, 10, 16, 1]T . [bs, 1, 10, 16, 1]
-            u_produce_v = torch.matmul(temp_u_hat.transpose(-1, -2), v)
-            b_ij = b_ij + u_produce_v
-            # [bs, 1152, 10, 1, 1]
-
-        c_ij = F.softmax(b_ij, dim=2)
-        s_j = (c_ij * u_hat).sum(dim=1, keepdim=True)
-        v = squash(s_j, dim=-2)
+        c = F.softmax(b, dim=1)
+        s = (c * u_hat).sum(dim=2)
+        v = squash(s)
         return v
+        # [bs, 10, 16]
 
 
 class CapsuleNet(nn.Module):
@@ -79,6 +79,7 @@ class CapsuleNet(nn.Module):
                                                  kernel_size=args.k_prim, stride=options.s_prim,
                                                  cap_dim=args.primary_cap_dim,
                                                  num_cap_map=self.num_primary_cap_map)
+
         num_prim_cap = int((args.img_h - 2*(args.k_prim-1)) * (args.img_h - 2*(args.k_prim-1)) / (args.s_prim*args.s_prim))
 
         self.digit_capsules = DigitCapsLayer(num_digit_cap=args.num_classes,
@@ -100,12 +101,12 @@ class CapsuleNet(nn.Module):
     def forward(self, imgs, y=None):
         x = F.relu(self.conv1(imgs), inplace=True)
         x = self.primary_capsules(x)
-        x = self.digit_capsules(x).squeeze(1).squeeze(-1)
+        x = self.digit_capsules(x)          # [bs, 10, 16]
 
-        v_length = (x ** 2).sum(dim=-1) ** 0.5
+        v_length = torch.norm(x, dim=-1)    # [bs, 10]
 
-        _, y_pred = v_length.max(dim=1)
-        y_pred_ohe = F.one_hot(y_pred, self.args.num_classes)
+        _, y_pred = v_length.max(dim=1)     # [bs]
+        y_pred_ohe = F.one_hot(y_pred, self.args.num_classes)   # [bs, 10]
 
         if y is None:
             y = y_pred_ohe
