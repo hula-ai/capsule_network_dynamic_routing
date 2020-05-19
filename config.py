@@ -48,7 +48,7 @@ parser.add_option('--lr', '--lr', dest='lr', default=0.001, type='float',
 parser.add_option('--beta1', '--beta1', dest='beta1', default=0.9, type='float',
                   help='beta 1 for Adam optimizer (default: 0.9)')
 
-# For CapsNet
+# For a Deeper CapsNet
 parser.add_option('--fe', '--feature_extractor', dest='feature_extractor', default='inception',
                   help='densenet, resnet, inception (default: resnet)')
 
@@ -57,6 +57,8 @@ parser.add_option('--f_conv1', '--f_conv1', dest='f_conv1', default=256, type='i
                   help='number of filters for the conv1 layer (default: 256)')
 parser.add_option('--k_conv1', '--k_conv1', dest='k_conv1', default=9, type='int',
                   help='filter size of the conv1 layer (default: 9)')
+parser.add_option('--s_conv1', '--s_conv1', dest='s_conv1', default=2, type='int',
+                  help='filter size of the conv1 layer (default: 1)')
 
 # # Primary capsule layer
 parser.add_option('--f_prim', '--f_prim', dest='f_prim', default=256, type='int',
@@ -70,6 +72,9 @@ parser.add_option('--pcd', '--primary_cap_dim', dest='primary_cap_dim', default=
                   help='dimension of each primary capsule (default: 8)')
 parser.add_option('--dcd', '--digit_cap_dim', dest='digit_cap_dim', default=16, type='int',
                   help='dimension of each digit capsule (default: 16)')
+
+parser.add_option('--ws', '--weight_share', dest='share_weight', default=True,
+                  help='whether to share W among child capsules of the same type (default: True)')
 
 # For decoder
 parser.add_option('--ad', '--add_decoder', dest='add_decoder', default=True,

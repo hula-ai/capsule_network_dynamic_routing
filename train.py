@@ -4,7 +4,7 @@ import torch.backends.cudnn as cudnn
 warnings.filterwarnings("ignore")
 from datetime import datetime
 from torch.utils.data import DataLoader
-from capsnet import CapsuleNet, CapsuleLoss
+from capsnet_v2 import CapsuleNet, CapsuleLoss
 from torch.optim import Adam
 import numpy as np
 from config import options
